@@ -1,0 +1,6 @@
+apiVersion: v2
+name: autotune-mvp
+description: Helm chart that deploys the AutoTune CronJob (container-based) plus sample workloads
+type: application
+version: 0.1.0
+appVersion: "1.0"

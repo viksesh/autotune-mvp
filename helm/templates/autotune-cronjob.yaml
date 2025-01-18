@@ -1,0 +1,39 @@
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: autotune-cron
+  labels:
+    app: autotune-mvp
+spec:
+  schedule: "{{ .Values.cronSchedule }}"
+  jobTemplate:
+    spec:
+      backoffLimit: 0
+      template:
+        spec:
+          serviceAccountName: autotune-sa
+          restartPolicy: Never
+          containers:
+          - name: autotune
+            image: "{{ .Values.aggregatorImage.repository }}:{{ .Values.aggregatorImage.tag }}"
+            imagePullPolicy: {{ .Values.aggregatorImage.pullPolicy | default "IfNotPresent" }}
+            env:
+            - name: PROMETHEUS_URL
+              value: "http://prometheus-server.monitoring.svc.cluster.local"
+            - name: TENANT_NAMESPACES
+              value: "{{ .Values.tenantNamespaces }}"
+            - name: DEFAULT_LOOKBACK_MINUTES
+              value: "10080"   # 7 days
+            - name: PROMETHEUS_STEP
+              value: "30m"
+            - name: AGGREGATOR_MAX_LOOKBACK_MINUTES
+              value: "20160"   # 14 days
+            - name: DEFAULT_TARGET_PERCENTILE
+              value: "95"
+            resources:
+              requests:
+                cpu: {{ .Values.aggregatorResources.requests.cpu }}
+                memory: {{ .Values.aggregatorResources.requests.memory }}
+              limits:
+                cpu: {{ .Values.aggregatorResources.limits.cpu }}
+                memory: {{ .Values.aggregatorResources.limits.memory }}

@@ -1,0 +1,101 @@
+namespace: autotune-tests
+
+cronSchedule: "0 2 * * *"  # daily at 2 AM
+
+# Docker image for the aggregator
+aggregatorImage:
+  repository: "your-registry/autotune-mvp"
+  tag: "latest"
+  pullPolicy: IfNotPresent
+
+# Tuning which namespaces (if any). Blank => all
+tenantNamespaces: ""
+
+# CronJob container resources
+aggregatorResources:
+  requests:
+    cpu: "100m"
+    memory: "256Mi"
+  limits:
+    cpu: "200m"
+    memory: "512Mi"
+
+# Workloads
+workloads:
+  overprovisionedCpu:
+    enabled: true
+    name: "overprov-cpu"
+    replicas: 1
+    autotune: "enabled"
+    tuneCpu: "enabled"
+    tuneMemory: "enabled"
+    tuneLimits: "enabled"
+    cpuRequest: "2000m"
+    cpuLimit: "3000m"
+    memRequest: "256Mi"
+    memLimit: "512Mi"
+    image: "busybox"
+    command: ["sh", "-c", "while true; do echo 'Over-provisioned CPU'; sleep 2; done"]
+
+  overprovisionedMemory:
+    enabled: true
+    name: "overprov-mem"
+    replicas: 1
+    autotune: "enabled"
+    tuneCpu: "enabled"
+    tuneMemory: "enabled"
+    tuneLimits: "enabled"
+    cpuRequest: "100m"
+    cpuLimit: "200m"
+    memRequest: "2048Mi"
+    memLimit: "4096Mi"
+    image: "busybox"
+    command: ["sh", "-c", "while true; do echo 'Over-provisioned Memory'; sleep 2; done"]
+
+  underprovisionedCpu:
+    enabled: true
+    name: "underprov-cpu"
+    replicas: 1
+    autotune: "enabled"
+    tuneCpu: "enabled"
+    tuneMemory: "enabled"
+    tuneLimits: "enabled"
+    cpuRequest: "100m"
+    cpuLimit: "200m"
+    memRequest: "256Mi"
+    memLimit: "512Mi"
+    image: "python:3.9-slim"
+    command: ["python", "-c", "import time; import math; while True: math.factorial(100000); time.sleep(0.5)"]
+
+  spikyWorkload:
+    enabled: true
+    name: "spiky-wl"
+    replicas: 1
+    autotune: "enabled"
+    tuneCpu: "enabled"
+    tuneMemory: "enabled"
+    tuneLimits: "enabled"
+    cpuRequest: "250m"
+    cpuLimit: "500m"
+    memRequest: "256Mi"
+    memLimit: "512Mi"
+    image: "python:3.9-slim"
+    command: ["python", "-c", "import time; import random; import math; \
+                             while True: \
+                               if random.random()<0.5: [math.factorial(30000) for _ in range(10)]; \
+                               time.sleep(random.random()*2)"]
+
+  partialTuning:
+    enabled: true
+    name: "cpu-requests-only"
+    replicas: 1
+    autotune: "enabled"
+    tuneCpu: "enabled"
+    tuneMemory: "disabled"
+    tuneLimits: "disabled"
+    cpuRequest: "500m"
+    cpuLimit: "700m"
+    memRequest: "256Mi"
+    memLimit: "256Mi"
+    image: "busybox"
+    command: ["sh", "-c", "while true; do echo 'CPU requests only, no memory changes'; sleep 2; done"]

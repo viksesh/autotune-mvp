@@ -1,0 +1,13 @@
+FROM python:3.9-slim
+
+# Working directory
+WORKDIR /app
+
+# Copy requirements first
+COPY requirements.txt /app/requirements.txt
+RUN pip install --no-cache-dir -r requirements.txt
+
+# Copy aggregator script
+COPY aggregator.py /app/aggregator.py
+
+ENTRYPOINT ["python", "/app/aggregator.py"]
