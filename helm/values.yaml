@@ -116,3 +116,25 @@ workloads:
     memRequest: "128Mi"
     cpuLimit: "200m"
     memLimit: "1024Mi"
+
+  cpuMemoryStress:
+    enabled: true
+    name: "cpu-memory-stress"
+    replicas: 1
+    autoTuneLabels: true     # If you'd like auto-tune labels, set this or remove
+    image: "python:3.9-slim"
+
+    # Memory + CPU stress settings
+    stepSizeMb: 20           # MB to allocate each step
+    totalMemSteps: 5         # how many steps of memory to allocate
+    cpuFactorialLoops: 10000 # how many factorial loops
+    intervalSec: 5           # how often to do each step
+
+    # Resource requests/limits
+    resources:
+      requests:
+        cpu: "100m"
+        memory: "128Mi"
+      limits:
+        cpu: "500m"
+        memory: "1Gi"

@@ -239,3 +239,86 @@ spec:
             cpu: {{ .Values.memorySpiker.cpuLimit }}
             memory: {{ .Values.memorySpiker.memLimit }}
 {{- end }}
+
+{{- if .Values.workloads.cpuMemoryStress.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.workloads.cpuMemoryStress.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.workloads.cpuMemoryStress.name }}
+    # Add other labels if needed (auto-tune, etc.)
+{{- if .Values.workloads.cpuMemoryStress.autoTuneLabels }}
+    container-efficiency.io/autotune: "enabled"
+    container-efficiency.io/tune-cpu: "enabled"
+    container-efficiency.io/tune-memory: "enabled"
+    container-efficiency.io/tune-limits: "enabled"
+{{- end }}
+spec:
+  replicas: {{ .Values.workloads.cpuMemoryStress.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.workloads.cpuMemoryStress.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.workloads.cpuMemoryStress.name }}
+    spec:
+      containers:
+      - name: {{ .Values.workloads.cpuMemoryStress.name }}
+        image: {{ .Values.workloads.cpuMemoryStress.image }}
+        imagePullPolicy: IfNotPresent
+        command:
+          - "python"
+          - "-c"
+          - |
+            import time
+            import math
+
+            # We'll repeatedly allocate memory and do CPU operations in a loop
+            mem_list = []
+
+            # Memory step size in MB:
+            step_size_mb = {{ .Values.workloads.cpuMemoryStress.stepSizeMb | default 20 }}
+            # How many steps to allocate memory:
+            total_mem_steps = {{ .Values.workloads.cpuMemoryStress.totalMemSteps | default 5 }}
+            # CPU factorial loop iterations each cycle:
+            cpu_factorial_loops = {{ .Values.workloads.cpuMemoryStress.cpuFactorialLoops | default 10000 }}
+            # Interval in seconds between steps:
+            interval_sec = {{ .Values.workloads.cpuMemoryStress.intervalSec | default 5 }}
+
+            print(f"Starting CPU+Memory stress: Alloc {step_size_mb}MB every {interval_sec}s for {total_mem_steps} steps, factorial loops: {cpu_factorial_loops} each time.")
+
+            allocated_mb = 0
+            for i in range(total_mem_steps):
+                # Memory allocation
+                chunk = "x" * (step_size_mb * 1024 * 1024)
+                mem_list.append(chunk)
+                allocated_mb += step_size_mb
+
+                # CPU stress: do some math.factorial calls
+                # Increase or reduce loops to intensify CPU usage
+                s = 0
+                for _ in range(cpu_factorial_loops):
+                    s += math.factorial(1000)  # just to chew CPU cycles
+
+                print(f"Step {i+1}: allocated ~{allocated_mb} MB total, did CPU factorial loops. Sleeping {interval_sec}s.")
+                time.sleep(interval_sec)
+
+            print("All memory steps done. Now idling in a loop, still holding memory, doing periodic CPU usage.")
+            # After initial steps, keep doing CPU bursts forever to maintain stress
+            while True:
+                # Do a quick CPU spike
+                for _ in range(cpu_factorial_loops):
+                    _ = math.factorial(2000)
+                time.sleep(interval_sec)
+        resources:
+          requests:
+            cpu: {{ .Values.workloads.cpuMemoryStress.resources.requests.cpu | default "100m" }}
+            memory: {{ .Values.workloads.cpuMemoryStress.resources.requests.memory | default "128Mi" }}
+          limits:
+            cpu: {{ .Values.workloads.cpuMemoryStress.resources.limits.cpu | default "500m" }}
+            memory: {{ .Values.workloads.cpuMemoryStress.resources.limits.memory | default "1Gi" }}
+{{- end }}
