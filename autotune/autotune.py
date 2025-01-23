@@ -229,13 +229,26 @@ def percentile(data_list, p):
     if not data_list:
         return 0
     sorted_vals = sorted(data_list)
-    k = (len(sorted_vals)-1)*p/100.0
+
+    # If p > 100, clamp p to 100 (just in case).
+    # If p < 0, clamp p to 0. 
+    # Or you can just assume p is 0..100.
+    p = max(0, min(100, p))
+
+    k = (len(sorted_vals) - 1) * p / 100.0
     f = int(k)
-    c = f+1
+    c = f + 1
+
+    # If c is out of range, clamp c to the last index
+    if c >= len(sorted_vals):
+        return sorted_vals[-1]  # The highest percentile just returns max
+
     if f == c:
         return sorted_vals[f]
-    d0 = sorted_vals[f]*(c-k)
-    d1 = sorted_vals[c]*(k-f)
+
+    # Interpolation
+    d0 = sorted_vals[f] * (c - k)
+    d1 = sorted_vals[c] * (k - f)
     return d0 + d1
 
 def is_auto_tune_enabled(dep):
