@@ -1,0 +1,184 @@
+{{- /*
+  This file creates multiple Deployments in one go. Each workload references the .Values.workloads
+  structure for configuration. Each workload is only rendered if enabled == true.
+*/ -}}
+
+{{- if .Values.workloads.overprovisionedCpu.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.workloads.overprovisionedCpu.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.workloads.overprovisionedCpu.name }}
+    container-efficiency.io/autotune: "{{ .Values.workloads.overprovisionedCpu.autotune }}"
+    container-efficiency.io/tune-cpu: "{{ .Values.workloads.overprovisionedCpu.tuneCpu }}"
+    container-efficiency.io/tune-memory: "{{ .Values.workloads.overprovisionedCpu.tuneMemory }}"
+    container-efficiency.io/tune-limits: "{{ .Values.workloads.overprovisionedCpu.tuneLimits }}"
+spec:
+  replicas: {{ .Values.workloads.overprovisionedCpu.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.workloads.overprovisionedCpu.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.workloads.overprovisionedCpu.name }}
+    spec:
+      containers:
+      - name: {{ .Values.workloads.overprovisionedCpu.name }}
+        image: {{ .Values.workloads.overprovisionedCpu.image }}
+        command: {{ toYaml .Values.workloads.overprovisionedCpu.command | nindent 8 }}
+        resources:
+          requests:
+            cpu: {{ .Values.workloads.overprovisionedCpu.cpuRequest }}
+            memory: {{ .Values.workloads.overprovisionedCpu.memRequest }}
+          limits:
+            cpu: {{ .Values.workloads.overprovisionedCpu.cpuLimit }}
+            memory: {{ .Values.workloads.overprovisionedCpu.memLimit }}
+{{- end }}
+
+{{- if .Values.workloads.overprovisionedMemory.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.workloads.overprovisionedMemory.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.workloads.overprovisionedMemory.name }}
+    container-efficiency.io/autotune: "{{ .Values.workloads.overprovisionedMemory.autotune }}"
+    container-efficiency.io/tune-cpu: "{{ .Values.workloads.overprovisionedMemory.tuneCpu }}"
+    container-efficiency.io/tune-memory: "{{ .Values.workloads.overprovisionedMemory.tuneMemory }}"
+    container-efficiency.io/tune-limits: "{{ .Values.workloads.overprovisionedMemory.tuneLimits }}"
+spec:
+  replicas: {{ .Values.workloads.overprovisionedMemory.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.workloads.overprovisionedMemory.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.workloads.overprovisionedMemory.name }}
+    spec:
+      containers:
+      - name: {{ .Values.workloads.overprovisionedMemory.name }}
+        image: {{ .Values.workloads.overprovisionedMemory.image }}
+        command: {{ toYaml .Values.workloads.overprovisionedMemory.command | nindent 8 }}
+        resources:
+          requests:
+            cpu: {{ .Values.workloads.overprovisionedMemory.cpuRequest }}
+            memory: {{ .Values.workloads.overprovisionedMemory.memRequest }}
+          limits:
+            cpu: {{ .Values.workloads.overprovisionedMemory.cpuLimit }}
+            memory: {{ .Values.workloads.overprovisionedMemory.memLimit }}
+{{- end }}
+
+{{- if .Values.workloads.underprovisionedCpu.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.workloads.underprovisionedCpu.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.workloads.underprovisionedCpu.name }}
+    container-efficiency.io/autotune: "{{ .Values.workloads.underprovisionedCpu.autotune }}"
+    container-efficiency.io/tune-cpu: "{{ .Values.workloads.underprovisionedCpu.tuneCpu }}"
+    container-efficiency.io/tune-memory: "{{ .Values.workloads.underprovisionedCpu.tuneMemory }}"
+    container-efficiency.io/tune-limits: "{{ .Values.workloads.underprovisionedCpu.tuneLimits }}"
+spec:
+  replicas: {{ .Values.workloads.underprovisionedCpu.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.workloads.underprovisionedCpu.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.workloads.underprovisionedCpu.name }}
+    spec:
+      containers:
+      - name: {{ .Values.workloads.underprovisionedCpu.name }}
+        image: {{ .Values.workloads.underprovisionedCpu.image }}
+        command: {{ toYaml .Values.workloads.underprovisionedCpu.command | nindent 8 }}
+        resources:
+          requests:
+            cpu: {{ .Values.workloads.underprovisionedCpu.cpuRequest }}
+            memory: {{ .Values.workloads.underprovisionedCpu.memRequest }}
+          limits:
+            cpu: {{ .Values.workloads.underprovisionedCpu.cpuLimit }}
+            memory: {{ .Values.workloads.underprovisionedCpu.memLimit }}
+{{- end }}
+
+{{- if .Values.workloads.spikyWorkload.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.workloads.spikyWorkload.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.workloads.spikyWorkload.name }}
+    container-efficiency.io/autotune: "{{ .Values.workloads.spikyWorkload.autotune }}"
+    container-efficiency.io/tune-cpu: "{{ .Values.workloads.spikyWorkload.tuneCpu }}"
+    container-efficiency.io/tune-memory: "{{ .Values.workloads.spikyWorkload.tuneMemory }}"
+    container-efficiency.io/tune-limits: "{{ .Values.workloads.spikyWorkload.tuneLimits }}"
+spec:
+  replicas: {{ .Values.workloads.spikyWorkload.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.workloads.spikyWorkload.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.workloads.spikyWorkload.name }}
+    spec:
+      containers:
+      - name: {{ .Values.workloads.spikyWorkload.name }}
+        image: {{ .Values.workloads.spikyWorkload.image }}
+        command: {{ toYaml .Values.workloads.spikyWorkload.command | nindent 8 }}
+        resources:
+          requests:
+            cpu: {{ .Values.workloads.spikyWorkload.cpuRequest }}
+            memory: {{ .Values.workloads.spikyWorkload.memRequest }}
+          limits:
+            cpu: {{ .Values.workloads.spikyWorkload.cpuLimit }}
+            memory: {{ .Values.workloads.spikyWorkload.memLimit }}
+{{- end }}
+
+{{- if .Values.workloads.partialTuning.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.workloads.partialTuning.name }}
+  namespace: {{ .Values.namespace }}
+  labels:
+    app: {{ .Values.workloads.partialTuning.name }}
+    container-efficiency.io/autotune: "{{ .Values.workloads.partialTuning.autotune }}"
+    container-efficiency.io/tune-cpu: "{{ .Values.workloads.partialTuning.tuneCpu }}"
+    container-efficiency.io/tune-memory: "{{ .Values.workloads.partialTuning.tuneMemory }}"
+    container-efficiency.io/tune-limits: "{{ .Values.workloads.partialTuning.tuneLimits }}"
+spec:
+  replicas: {{ .Values.workloads.partialTuning.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.workloads.partialTuning.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.workloads.partialTuning.name }}
+    spec:
+      containers:
+      - name: {{ .Values.workloads.partialTuning.name }}
+        image: {{ .Values.workloads.partialTuning.image }}
+        command: {{ toYaml .Values.workloads.partialTuning.command | nindent 8 }}
+        resources:
+          requests:
+            cpu: {{ .Values.workloads.partialTuning.cpuRequest }}
+            memory: {{ .Values.workloads.partialTuning.memRequest }}
+          limits:
+            cpu: {{ .Values.workloads.partialTuning.cpuLimit }}
+            memory: {{ .Values.workloads.partialTuning.memLimit }}
+{{- end }}
