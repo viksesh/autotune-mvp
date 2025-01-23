@@ -99,3 +99,20 @@ workloads:
     memLimit: "256Mi"
     image: "busybox"
     command: ["sh", "-c", "while true; do echo 'CPU requests only, no memory changes'; sleep 2; done"]
+
+  memorySpiker:
+    enabled: true
+    name: "memory-spike"
+    namespace: "default"
+    replicas: 1
+
+    # Python logic for memory usage
+    stepSizeMB: 20      # how many MB to allocate each loop
+    totalSteps: 10      # how many times to allocate stepSizeMB
+    intervalSec: 5      # seconds to sleep between allocations
+
+    # Resource requests/limits
+    cpuRequest: "100m"
+    memRequest: "128Mi"
+    cpuLimit: "200m"
+    memLimit: "1024Mi"

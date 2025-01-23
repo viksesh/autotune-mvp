@@ -182,3 +182,60 @@ spec:
             cpu: {{ .Values.workloads.partialTuning.cpuLimit }}
             memory: {{ .Values.workloads.partialTuning.memLimit }}
 {{- end }}
+
+{{- if .Values.memorySpiker.enabled }}
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: {{ .Values.memorySpiker.name }}
+  namespace: {{ .Values.memorySpiker.namespace }}
+  labels:
+    app: {{ .Values.memorySpiker.name }}
+spec:
+  replicas: {{ .Values.memorySpiker.replicas }}
+  selector:
+    matchLabels:
+      app: {{ .Values.memorySpiker.name }}
+  template:
+    metadata:
+      labels:
+        app: {{ .Values.memorySpiker.name }}
+    spec:
+      containers:
+      - name: {{ .Values.memorySpiker.name }}
+        image: python:3.9-slim
+        command:
+          - "python"
+          - "-c"
+          - |
+            import time
+
+            # Read parameters from the environment or just inline from Helm values
+            step_size_mb = {{ .Values.memorySpiker.stepSizeMB }}
+            total_steps = {{ .Values.memorySpiker.totalSteps }}
+            interval_sec = {{ .Values.memorySpiker.intervalSec }}
+
+            mem_list = []
+            print(f"Starting memory spike: allocating {step_size_mb} MB every {interval_sec} seconds, for {total_steps} steps.")
+
+            for i in range(total_steps):
+                # Allocate 'step_size_mb' MB by appending a large string
+                chunk = "x" * (step_size_mb * 1024 * 1024)
+                mem_list.append(chunk)
+
+                current_mb = step_size_mb * (i + 1)
+                print(f"Allocated ~{current_mb} MB so far. Sleeping {interval_sec}s.")
+                time.sleep(interval_sec)
+
+            print("Done allocating memory. Holding allocated memory, now idling.")
+            while True:
+                time.sleep(30)
+        resources:
+          requests:
+            cpu: {{ .Values.memorySpiker.cpuRequest }}
+            memory: {{ .Values.memorySpiker.memRequest }}
+          limits:
+            cpu: {{ .Values.memorySpiker.cpuLimit }}
+            memory: {{ .Values.memorySpiker.memLimit }}
+{{- end }}
