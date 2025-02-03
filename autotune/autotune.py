@@ -397,21 +397,50 @@ def parse_cpu_millicores(cpu_string):
 
 def parse_memory_in_mi(memory_string):
     """
-    Convert memory string (e.g. "128Mi", "1Gi") into integer Mi.
+    Convert memory string into integer Mi.
+    Examples we handle:
       - "128Mi" => 128
       - "1Gi"   => 1024
-      - fallback => parse as float MB => convert to int
+      - "600M"  => interpret as 600 MB => ~ 600 / 1.048576 Mi => ~572 Mi 
+        (or you can decide MB=Mi for simplicity)
+      - "600m"  => if someone typed it by mistake, you can decide how to handle
+      - fallback => parse as float MB or just Mi
     """
+
+    # 1) Check "Gi"
     if memory_string.endswith("Gi"):
         float_val = float(memory_string[:-2])
+        # 1 Gi => 1024 Mi
         return int(float_val * 1024)
+
+    # 2) Check "Mi"
     elif memory_string.endswith("Mi"):
         float_val = float(memory_string[:-2])
         return int(float_val)
+
+    # 3) Check "G" or "M" 
+    # Some tenants or code might produce "600M" or "2G"
+    elif memory_string.endswith("G"):
+        float_val = float(memory_string[:-1])
+        # interpret "G" => gigabytes => 1G ~ 1000 MB => ~ 953 Mi if 1GB=1000MB
+        # or interpret 1G => 1024 Mi. It's up to you. 
+        # We'll do the simpler approach 1 G = 1000 MB => 1 MB = 1/1.048576 Mi
+        # so 1G => ~953 Mi
+        # For simplicity let's do: 1 G => 1000 MB => 1000 / 1.048576 => ~953
+        # We'll do that logic:
+        return int(float_val * 1000 / 1.048576)
+
+    elif memory_string.endswith("M"):
+        float_val = float(memory_string[:-1])
+        # interpret "M" => MB => 1 MB => 1/1.048576 Mi => ~0.9537 Mi
+        # We'll convert to Mi
+        return int(float_val / 1.048576)
+
     else:
-        # fallback parse as MB
+        # fallback parse as float
+        # If no suffix, we might interpret as "some MB"
         float_val = float(memory_string)
-        return int(float_val)
+        return int(float_val / 1.048576)  # convert MB => Mi
 
 
 def percentile(values_list, percentile_num):
