@@ -1,9 +1,7 @@
 {
-    "overwrite": false,
-    "dashboard": {
       "id": null,
-      "uid": "autotune-timeseries",
-      "title": "AutoTune Resource Metrics",
+      "uid": "autotune-timeseries-all",
+      "title": "AutoTune Resource Metrics (All by Default)",
       "time": {
         "from": "now-6h",
         "to": "now"
@@ -11,7 +9,10 @@
       "timepicker": {},
       "version": 1,
       "schemaVersion": 36,
-      "tags": ["autotune", "prometheus"],
+      "tags": [
+        "autotune",
+        "prometheus"
+      ],
       "style": "dark",
       "timezone": "",
       "panels": [
@@ -22,33 +23,29 @@
           "datasource": {
             "type": "prometheus",
             "uid": "Prometheus" 
-            /* 
-               or "name": "Prometheus" depending on your Grafana version. 
-               Adjust to match your actual Prometheus data source name. 
-            */
           },
           "targets": [
             {
               "refId": "A",
-              "expr": "autotune_new_cpu_requests_millicores{namespace=\"$namespace\",deployment=~\"$deployment\",container=~\"$container\"}",
+              "expr": "autotune_new_cpu_requests_millicores{namespace=~\"$namespace\",deployment=~\"$deployment\",container=~\"$container\"}",
               "legendFormat": "CPU Requests: {{container}}",
               "intervalFactor": 1
             },
             {
               "refId": "B",
-              "expr": "autotune_new_memory_requests_mi{namespace=\"$namespace\",deployment=~\"$deployment\",container=~\"$container\"}",
+              "expr": "autotune_new_memory_requests_mi{namespace=~\"$namespace\",deployment=~\"$deployment\",container=~\"$container\"}",
               "legendFormat": "Mem Requests: {{container}}",
               "intervalFactor": 1
             },
             {
               "refId": "C",
-              "expr": "autotune_new_cpu_limits_millicores{namespace=\"$namespace\",deployment=~\"$deployment\",container=~\"$container\"}",
+              "expr": "autotune_new_cpu_limits_millicores{namespace=~\"$namespace\",deployment=~\"$deployment\",container=~\"$container\"}",
               "legendFormat": "CPU Limits: {{container}}",
               "intervalFactor": 1
             },
             {
               "refId": "D",
-              "expr": "autotune_new_memory_limits_mi{namespace=\"$namespace\",deployment=~\"$deployment\",container=~\"$container\"}",
+              "expr": "autotune_new_memory_limits_mi{namespace=~\"$namespace\",deployment=~\"$deployment\",container=~\"$container\"}",
               "legendFormat": "Mem Limits: {{container}}",
               "intervalFactor": 1
             }
@@ -89,9 +86,15 @@
             "hide": 0,
             "query": "label_values(autotune_new_cpu_requests_millicores, \"namespace\")",
             "sort": 1,
-            "definition": "",
             "refresh": 1,
-            "includeAll": false
+            "includeAll": true,
+            "allValue": ".*",
+            "multi": false,
+            "current": {
+              "selected": true,
+              "text": "All",
+              "value": ".*"
+            }
           },
           {
             "name": "deployment",
@@ -102,11 +105,17 @@
             },
             "label": "Deployment",
             "hide": 0,
-            "query": "label_values(autotune_new_cpu_requests_millicores{namespace=\"$namespace\"}, \"deployment\")",
+            "query": "label_values(autotune_new_cpu_requests_millicores{namespace=~\"$namespace\"}, \"deployment\")",
             "sort": 1,
-            "definition": "",
             "refresh": 1,
-            "includeAll": false
+            "includeAll": true,
+            "allValue": ".*",
+            "multi": false,
+            "current": {
+              "selected": true,
+              "text": "All",
+              "value": ".*"
+            }
           },
           {
             "name": "container",
@@ -117,14 +126,18 @@
             },
             "label": "Container",
             "hide": 0,
-            "query": "label_values(autotune_new_cpu_requests_millicores{namespace=\"$namespace\",deployment=~\"$deployment\"}, \"container\")",
+            "query": "label_values(autotune_new_cpu_requests_millicores{namespace=~\"$namespace\",deployment=~\"$deployment\"}, \"container\")",
             "sort": 1,
-            "definition": "",
             "refresh": 1,
-            "includeAll": false
+            "includeAll": true,
+            "allValue": ".*",
+            "multi": false,
+            "current": {
+              "selected": true,
+              "text": "All",
+              "value": ".*"
+            }
           }
         ]
       }
-    }
-  }
-  
+}  
