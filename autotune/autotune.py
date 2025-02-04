@@ -10,6 +10,7 @@ import json
 from prometheus_api_client import PrometheusConnect
 from kubernetes import client, config
 from kubernetes.client.exceptions import ApiException
+from prometheus_client import CollectorRegistry, Gauge, push_to_gateway
 
 # Configure basic logging
 logging.basicConfig(level=logging.INFO)
@@ -18,6 +19,7 @@ logging.basicConfig(level=logging.INFO)
 # 1. ENVIRONMENT VARIABLES (with explicit names and clarifying comments)
 # ------------------------------------------------------------------------------
 PROMETHEUS_URL = os.getenv("PROMETHEUS_URL", "http://prometheus-server.monitoring.svc.cluster.local")
+PUSHGATEWAY_URL = os.getenv("PUSHGATEWAY_URL", "http://push-gateway.platform-observ.svc.cluster.local:9091")
 """
 PROMETHEUS_URL: The base URL for querying Prometheus data. 
 Default is "http://prometheus-server.monitoring.svc.cluster.local", 
@@ -129,6 +131,35 @@ def main():
     cpu_query_string = 'max_over_time(container_cpu_usage_seconds_total{pod!=""}[5m])'
     mem_query_string = 'max_over_time(container_memory_working_set_bytes{pod!=""}[5m])'
 
+    # Setup ephemeral registry
+    registry = CollectorRegistry()
+
+    # Define gauges
+    gauge_cpu_requests = Gauge(
+        "autotune_new_cpu_requests_millicores",
+        "New CPU requests computed by AutoTune, in millicores",
+        ["deployment", "namespace", "container"],
+        registry=registry
+    )
+    gauge_mem_requests = Gauge(
+        "autotune_new_memory_requests_mi",
+        "New memory requests computed by AutoTune, in Mi",
+        ["deployment", "namespace", "container"],
+        registry=registry
+    )
+    gauge_cpu_limits = Gauge(
+        "autotune_new_cpu_limits_millicores",
+        "New CPU limits computed by AutoTune, in millicores",
+        ["deployment", "namespace", "container"],
+        registry=registry
+    )
+    gauge_mem_limits = Gauge(
+        "autotune_new_memory_limits_mi",
+        "New memory limits computed by AutoTune, in Mi",
+        ["deployment", "namespace", "container"],
+        registry=registry
+    )
+
     # Attempt to query Prometheus
     try:
         cpu_query_data = prometheus_conn.custom_query_range(
@@ -231,6 +262,31 @@ def main():
             }
             old_new_resources_array.append(old_new_entry)
 
+            # Now we set the gauge for that deployment/container
+            gauge_cpu_requests.labels(
+                deployment=deployment_name,
+                namespace=namespace_name,
+                container=container_name
+            ).set(recommended_requests['cpu'])
+
+            gauge_mem_requests.labels(
+                deployment=deployment_name,
+                namespace=namespace_name,
+                container=container_name
+            ).set(recommended_requests['mem'])
+
+            gauge_cpu_limits.labels(
+                deployment=deployment_name,
+                namespace=namespace_name,
+                container=container_name
+            ).set(recommended_limits['cpu'])
+
+            gauge_mem_limits.labels(
+                deployment=deployment_name,
+                namespace=namespace_name,
+                container=container_name
+            ).set(recommended_limits['mem'])
+
         # If we have patches to apply
         if container_patch_list:
             # We'll store last patch time + old/new resources in the same patch
@@ -259,6 +315,17 @@ def main():
                 patch_count += 1
             except ApiException as ex_patch:
                 logging.warning(f"Failed patching {deployment_name} in {namespace_name}: {ex_patch}")
+        
+        # 6. After setting all the gauge values for this aggregator run, push once
+        try:
+            push_to_gateway(
+                gateway=PUSHGATEWAY_URL,
+                job="autotune",
+                registry=registry
+            )
+            logging.info("Pushed new CPU/Memory requests/limits to Pushgateway.")
+        except Exception as e:
+            logging.error(f"Failed pushing to gateway: {e}")
 
     logging.info(f"AutoTune aggregator finished. Patched {patch_count} Deployments.")
 
