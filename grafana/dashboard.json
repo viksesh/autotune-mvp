@@ -1,0 +1,130 @@
+{
+    "overwrite": false,
+    "dashboard": {
+      "id": null,
+      "uid": "autotune-timeseries",
+      "title": "AutoTune Resource Metrics",
+      "time": {
+        "from": "now-6h",
+        "to": "now"
+      },
+      "timepicker": {},
+      "version": 1,
+      "schemaVersion": 36,
+      "tags": ["autotune", "prometheus"],
+      "style": "dark",
+      "timezone": "",
+      "panels": [
+        {
+          "type": "timeseries",
+          "title": "AutoTune Requests & Limits",
+          "id": 1,
+          "datasource": {
+            "type": "prometheus",
+            "uid": "Prometheus" 
+            /* 
+               or "name": "Prometheus" depending on your Grafana version. 
+               Adjust to match your actual Prometheus data source name. 
+            */
+          },
+          "targets": [
+            {
+              "refId": "A",
+              "expr": "autotune_new_cpu_requests_millicores{namespace=\"$namespace\",deployment=~\"$deployment\",container=~\"$container\"}",
+              "legendFormat": "CPU Requests: {{container}}",
+              "intervalFactor": 1
+            },
+            {
+              "refId": "B",
+              "expr": "autotune_new_memory_requests_mi{namespace=\"$namespace\",deployment=~\"$deployment\",container=~\"$container\"}",
+              "legendFormat": "Mem Requests: {{container}}",
+              "intervalFactor": 1
+            },
+            {
+              "refId": "C",
+              "expr": "autotune_new_cpu_limits_millicores{namespace=\"$namespace\",deployment=~\"$deployment\",container=~\"$container\"}",
+              "legendFormat": "CPU Limits: {{container}}",
+              "intervalFactor": 1
+            },
+            {
+              "refId": "D",
+              "expr": "autotune_new_memory_limits_mi{namespace=\"$namespace\",deployment=~\"$deployment\",container=~\"$container\"}",
+              "legendFormat": "Mem Limits: {{container}}",
+              "intervalFactor": 1
+            }
+          ],
+          "fieldConfig": {
+            "defaults": {
+              "unit": "none"
+            },
+            "overrides": []
+          },
+          "options": {
+            "legend": {
+              "displayMode": "table",
+              "placement": "bottom"
+            },
+            "tooltip": {
+              "mode": "single"
+            }
+          },
+          "gridPos": {
+            "h": 15,
+            "w": 24,
+            "x": 0,
+            "y": 0
+          }
+        }
+      ],
+      "templating": {
+        "list": [
+          {
+            "name": "namespace",
+            "type": "query",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "Prometheus"
+            },
+            "label": "Namespace",
+            "hide": 0,
+            "query": "label_values(autotune_new_cpu_requests_millicores, \"namespace\")",
+            "sort": 1,
+            "definition": "",
+            "refresh": 1,
+            "includeAll": false
+          },
+          {
+            "name": "deployment",
+            "type": "query",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "Prometheus"
+            },
+            "label": "Deployment",
+            "hide": 0,
+            "query": "label_values(autotune_new_cpu_requests_millicores{namespace=\"$namespace\"}, \"deployment\")",
+            "sort": 1,
+            "definition": "",
+            "refresh": 1,
+            "includeAll": false
+          },
+          {
+            "name": "container",
+            "type": "query",
+            "datasource": {
+              "type": "prometheus",
+              "uid": "Prometheus"
+            },
+            "label": "Container",
+            "hide": 0,
+            "query": "label_values(autotune_new_cpu_requests_millicores{namespace=\"$namespace\",deployment=~\"$deployment\"}, \"container\")",
+            "sort": 1,
+            "definition": "",
+            "refresh": 1,
+            "includeAll": false
+          }
+        ]
+      }
+    }
+  }
+  
